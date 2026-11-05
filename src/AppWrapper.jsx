@@ -2,6 +2,8 @@ import PropTypes from "prop-types";
 import { Provider } from "react-redux";
 import { MemoryRouter, useInRouterContext } from "react-router-dom";
 import { store } from "./store/store.js";
+import { registrarSesionVencida } from "./lib/axiosInstance";
+import { sesionVencida } from "./features/auth/authSlice";
 import App from "./App.jsx";
 
 const MaybeRouter = ({ children }) =>
@@ -10,6 +12,8 @@ const MaybeRouter = ({ children }) =>
 MaybeRouter.propTypes = {
   children: PropTypes.node,
 };
+
+registrarSesionVencida(() => store.dispatch(sesionVencida()));
 
 const AppWrapper = (props) => (
   <Provider store={store}>

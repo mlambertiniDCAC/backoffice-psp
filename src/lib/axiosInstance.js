@@ -15,8 +15,18 @@ const processQueue = (error) => {
   failedQueue = [];
 };
 
+let alVencerSesion = null;
+
+export const registrarSesionVencida = (callback) => {
+  alVencerSesion = callback;
+};
+
 const forceLogout = () => {
   authStorage.clear();
+  if (alVencerSesion) {
+    alVencerSesion();
+    return;
+  }
   window.location.reload();
 };
 

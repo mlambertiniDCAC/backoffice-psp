@@ -44,7 +44,8 @@ const authSlice = createSlice({
     sesionVencida: (state) => {
       authStorage.clear();
       state.token = null;
-      state.error = "La sesión venció. Volvé a entrar.";
+      state.error =
+        "La sesión venció y no se pudo renovar. Volvé a entrar — ojo que el login está limitado a 10 por minuto para todo el ambiente.";
     },
   },
   extraReducers: (builder) => {

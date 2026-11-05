@@ -40,9 +40,18 @@ de un shell.
 - **El alta de una cuenta CVU le pega a BIND de verdad** y la cuenta queda escrita en
   el banco. El `DELETE` de una cuenta ejecuta la baja del CVU y es irreversible. Las
   dos pasan por una confirmación que nombra lo que va a pasar.
-- **La sesión admin vence a los ~5 minutos.** El interceptor renueva con
-  `POST /v1/auth/refresh`; si eso falla, vuelve al login. El login está limitado a
-  **10 por minuto para todo el ambiente**, así que no conviene reintentar en loop.
+- **La sesión admin vence a los ~5 minutos y hoy no se puede renovar.** El
+  interceptor llama a `POST /v1/auth/refresh` ante un 401, pero esa ruta exige que la
+  sesión guardada tenga `refresh_token`, y Keycloak no lo está devolviendo para el
+  `grant_type: password` del client de la app. El gateway lo guardaría si viniera
+  (`session.service.ts` lo persiste), así que **es configuración del client en
+  Keycloak**, no del gateway ni de este front. Peor: cuando el refresh falla, el
+  gateway **destruye la sesión** antes de responder 401.
+
+  Mientras tanto, el front detecta el caso y vuelve al login con el motivo a la vista,
+  sin recargar la página. Ojo que el login está limitado a **10 por minuto para todo
+  el ambiente**: una sesión que muere cada 5 minutos consume ese presupuesto rápido.
+
 - **El dominio del deploy tiene que estar en `CORS_ORIGINS` del gateway.** La
   comparación es exacta, sin comodines, y cada preview de Vercel tiene dominio
   propio. Es lo primero a revisar si "no anda".

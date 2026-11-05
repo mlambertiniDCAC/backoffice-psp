@@ -51,3 +51,17 @@ describe("login", () => {
     expect(store.getState().auth.token).toBeNull();
   });
 });
+
+describe("sesión vencida", () => {
+  it("borra el token y explica por qué, sin recargar la página", async () => {
+    const { sesionVencida } = await import("../authSlice");
+    loginAdmin.mockResolvedValueOnce({ token: "opaco-123" });
+    const store = arme();
+    await store.dispatch(login({ mail: "a@b.com", password: "x" }));
+
+    store.dispatch(sesionVencida());
+
+    expect(store.getState().auth.token).toBeNull();
+    expect(store.getState().auth.error).toMatch(/no se pudo renovar/i);
+  });
+});
