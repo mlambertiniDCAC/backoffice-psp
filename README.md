@@ -21,12 +21,12 @@ de un shell.
 
 ## Qué hace
 
-| Sección                 | Qué resuelve                                                                                                                                                    |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Compliance**          | Bandeja por estado, detalle del legajo, revisión documento por documento, personas, y aceptar / rechazar / bloquear / desbloquear / reiniciar                   |
-| **Altas trabadas**      | Cuentas `EN_PROCESO` sin CVU, con **el motivo real del fallo a la vista**. Reintento vía sincronizar, informar un CVU que BIND ya creó, y corregir CUIT/titular |
-| **Cuentas**             | Listado, detalle, alias, baja                                                                                                                                   |
-| **Usuarios y permisos** | Vínculos usuario↔cuenta, revocar, re-sincronizar desde el legajo, y la vista de permisos del sujeto                                                             |
+| Sección                 | Qué resuelve                                                                                                                                                                                                                   |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Compliance**          | Bandeja por estado, detalle del legajo, revisión documento por documento, personas, y aceptar / rechazar / bloquear / desbloquear / reiniciar                                                                                  |
+| **Altas trabadas**      | Cuentas `EN_PROCESO` sin CVU, con el motivo del último intento a la vista. **Reintentar el alta** (crea la CVU en BIND), **Sincronizar permisos** (no toca el banco), informar un CVU que BIND ya creó, y guardar CUIT/titular |
+| **Cuentas**             | Listado, detalle, alias, baja                                                                                                                                                                                                  |
+| **Usuarios y permisos** | Vínculos usuario↔cuenta, revocar, re-sincronizar desde el legajo, y la vista de permisos del sujeto                                                                                                                            |
 
 ## Lo que hay que saber antes de usarlo
 
@@ -55,6 +55,21 @@ de un shell.
 - **El dominio del deploy tiene que estar en `CORS_ORIGINS` del gateway.** La
   comparación es exacta, sin comodines, y cada preview de Vercel tiene dominio
   propio. Es lo primero a revisar si "no anda".
+
+## Reintentar un alta no es sincronizar
+
+`POST /v1/compliance/:ref/permisos/sincronizar` solo crea la cuenta en BIND **si el
+body trae `cuit` y `name`**. Sin ellos, `asegurarCuenta` del gateway ve que ya existe
+una cuenta en `EN_PROCESO` y la devuelve tal cual: responde 200, no llama al banco y
+no cambia nada — verificado contra la base de stage, donde tres reintentos con body
+vacío no dejaron ni una llamada al bridge.
+
+- **Reintentar el alta** → body `{cuit, name}`. Le pega a BIND y crea la CVU.
+- **Sincronizar permisos** → body vacío. Rehace vínculos y permisos de un legajo ya
+  aceptado, para el caso "compliance aceptado, permisos pendientes".
+
+BIND es estricto con el titular: un nombre con comas o con `< >` vuelve como `PA015`
+("el campo titular no cumple con el formato requerido") y la cuenta queda trabada.
 
 ## Los dos identificadores
 
