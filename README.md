@@ -30,8 +30,13 @@ de un shell.
 
 ## Lo que hay que saber antes de usarlo
 
-- **Necesita un usuario con rol `admin` del realm `psp`.** No puede ser el mismo
-  usuario que un cliente: el login del gateway bifurca por rol.
+- **Necesita un usuario con rol `admin` del realm `psp`.** El login devuelve **solo
+  el token opaco**, no el rol, así que el front no sabe de antemano si la sesión es
+  admin: con un usuario que no lo sea, las pantallas responden 403. Tampoco puede ser
+  el mismo usuario que un cliente, porque el login del gateway bifurca por rol.
+- **`GET /v1/movimientos` no sirve desde acá.** Está detrás del guard de permisos de
+  `ms-psp`, que exige un vínculo con `ver-psp` sobre el sujeto, y un admin no lo tiene.
+  Por eso el detalle de cuenta no muestra movimientos.
 - **El alta de una cuenta CVU le pega a BIND de verdad** y la cuenta queda escrita en
   el banco. El `DELETE` de una cuenta ejecuta la baja del CVU y es irreversible. Las
   dos pasan por una confirmación que nombra lo que va a pasar.

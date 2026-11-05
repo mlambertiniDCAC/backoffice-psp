@@ -3,8 +3,6 @@ import { authStorage } from "src/lib/authStorage";
 import { loginAdmin, cerrarSesion } from "src/lib/api/auth";
 import { getApiErrorMessage } from "src/lib/apiError";
 
-const ROL_ADMIN = "admin";
-
 export const login = createAsyncThunk(
   "auth/login",
   async ({ mail, password }, { rejectWithValue }) => {
@@ -32,8 +30,6 @@ export const logout = createAsyncThunk("auth/logout", async () => {
 
 const estadoInicial = {
   token: authStorage.getToken(),
-  sub: authStorage.getSub(),
-  scope: authStorage.getScope(),
   cargando: false,
   error: null,
 };
@@ -48,8 +44,6 @@ const authSlice = createSlice({
     sesionVencida: (state) => {
       authStorage.clear();
       state.token = null;
-      state.sub = null;
-      state.scope = null;
       state.error = "La sesión venció. Volvé a entrar.";
     },
   },
@@ -60,14 +54,10 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(login.fulfilled, (state, action) => {
-        const { token, sub, scope } = action.payload ?? {};
+        const token = action.payload?.token ?? null;
         state.cargando = false;
-        state.token = token ?? null;
-        state.sub = sub ?? null;
-        state.scope = scope ?? null;
+        state.token = token;
         if (token) authStorage.setToken(token);
-        authStorage.setSub(sub);
-        authStorage.setScope(scope);
       })
       .addCase(login.rejected, (state, action) => {
         state.cargando = false;
@@ -75,8 +65,6 @@ const authSlice = createSlice({
       })
       .addCase(logout.fulfilled, (state) => {
         state.token = null;
-        state.sub = null;
-        state.scope = null;
         state.error = null;
       });
   },
@@ -85,7 +73,5 @@ const authSlice = createSlice({
 export const { limpiarError, sesionVencida } = authSlice.actions;
 
 export const selectAutenticado = (state) => Boolean(state.auth.token);
-export const selectEsAdmin = (state) =>
-  (state.auth.scope ?? "").split(" ").includes(ROL_ADMIN);
 
 export default authSlice.reducer;

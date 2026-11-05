@@ -27,7 +27,7 @@ export const cargarBandeja = createAsyncThunk(
       const cuentas = (await listarCuentas()).map(adaptarCuenta);
       return {
         filas: cruzarLegajosConCuentas(filas, cuentas),
-        total: paginado?.total ?? filas.length,
+        total: paginado?.paginacion?.total ?? filas.length,
         pagina,
         estado: estado ?? null,
       };
