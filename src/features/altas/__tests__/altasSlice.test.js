@@ -78,7 +78,6 @@ describe("reintentarAlta vs sincronizar", () => {
     await store.dispatch(
       reintentarAlta({
         refExterna: "3421",
-        cuentaIdExterno: "42a68412",
         cuit: "30712345671",
         name: "Hirthe",
       })
@@ -98,9 +97,7 @@ describe("reintentarAlta vs sincronizar", () => {
     listarCompliances.mockResolvedValue({ data: [] });
     const store = configureStore({ reducer: { altas: reducer } });
 
-    await store.dispatch(
-      sincronizar({ refExterna: "3421", cuentaIdExterno: "42a68412" })
-    );
+    await store.dispatch(sincronizar({ refExterna: "3421" }));
 
     expect(sincronizarPermisos).toHaveBeenCalledWith("3421");
   });

@@ -21,12 +21,12 @@ de un shell.
 
 ## Qué hace
 
-| Sección                 | Qué resuelve                                                                                                                                                                                                                   |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Compliance**          | Bandeja por estado, detalle del legajo, revisión documento por documento, personas, y aceptar / rechazar / bloquear / desbloquear / reiniciar                                                                                  |
-| **Altas trabadas**      | Cuentas `EN_PROCESO` sin CVU, con el motivo del último intento a la vista. **Reintentar el alta** (crea la CVU en BIND), **Sincronizar permisos** (no toca el banco), informar un CVU que BIND ya creó, y guardar CUIT/titular |
-| **Cuentas**             | Listado, detalle, alias, baja                                                                                                                                                                                                  |
-| **Usuarios y permisos** | Vínculos usuario↔cuenta, revocar, re-sincronizar desde el legajo, y la vista de permisos del sujeto                                                                                                                            |
+| Sección                 | Qué resuelve                                                                                                                                                                             |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Compliance**          | Bandeja por estado, detalle del legajo, revisión documento por documento, personas, y aceptar / rechazar / bloquear / desbloquear / reiniciar                                            |
+| **Altas trabadas**      | Cuentas `EN_PROCESO` sin CVU. **Reintentar el alta** (crea la CVU en BIND), **Sincronizar permisos** (no toca el banco), informar un CVU que BIND ya creó, y guardar CUIT y razón social |
+| **Cuentas**             | Listado, detalle, alias, baja                                                                                                                                                            |
+| **Usuarios y permisos** | Vínculos usuario↔cuenta, revocar, re-sincronizar desde el legajo, y la vista de permisos del sujeto                                                                                      |
 
 ## Lo que hay que saber antes de usarlo
 
@@ -68,8 +68,18 @@ vacío no dejaron ni una llamada al bridge.
 - **Sincronizar permisos** → body vacío. Rehace vínculos y permisos de un legajo ya
   aceptado, para el caso "compliance aceptado, permisos pendientes".
 
-BIND es estricto con el titular: un nombre con comas o con `< >` vuelve como `PA015`
-("el campo titular no cumple con el formato requerido") y la cuenta queda trabada.
+BIND es estricto con la razón social: un nombre con comas o con `< >` vuelve como
+`PA015` ("el campo titular no cumple con el formato requerido") y la cuenta queda
+trabada.
+
+**El motivo del rechazo no se muestra en la UI, a propósito.** `ms-psp` envuelve el
+rechazo de BIND en un `BadGatewayException('No se pudo obtener CVU')` sin el código
+del proveedor, y el gateway reemplaza el cuerpo de todo 5xx: el `GE500` no sale del
+backend. Mostrar un "el servicio respondió 502" en cada fila sería ruido, así que la
+pantalla solo avisa que la acción falló. **El motivo real está en
+`psp.psp_bridge_errors`**, que lo guarda antes de que se pierda. Que llegue a la
+pantalla exige cambiar `ms-psp` para mapear el rechazo a un 4xx con el código, y eso
+quedó fuera de alcance por decisión del equipo.
 
 ## Los dos identificadores
 

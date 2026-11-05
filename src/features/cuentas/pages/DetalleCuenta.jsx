@@ -6,7 +6,6 @@ import {
   cargarVinculos,
   revocar,
 } from "src/features/usuarios/store/usuariosSlice";
-import { describirMotivo } from "src/lib/adaptadores";
 import { SITUACIONES_CUENTA } from "src/lib/constants";
 import {
   Aviso,
@@ -39,9 +38,6 @@ const DetalleCuenta = () => {
   const enProcesoSinCvu =
     cuenta.situacion === SITUACIONES_CUENTA.EN_PROCESO && !cuenta.cvu;
   const activa = cuenta.situacion === SITUACIONES_CUENTA.ACTIVA;
-  const motivo = cuenta.ultimoError
-    ? describirMotivo(cuenta.ultimoError, null)
-    : null;
 
   return (
     <>
@@ -52,11 +48,6 @@ const DetalleCuenta = () => {
       </Bajada>
 
       {error ? <Aviso $tono="error">{error}</Aviso> : null}
-      {motivo ? (
-        <Aviso>
-          <strong>{motivo.titulo}</strong> — {motivo.detalle}
-        </Aviso>
-      ) : null}
 
       <Panel>
         <h2>Datos</h2>
@@ -112,9 +103,8 @@ const DetalleCuenta = () => {
         )}
         {enProcesoSinCvu ? (
           <Aviso>
-            Esta cuenta está trabada. El CUIT, el titular y el CVU se corrigen
-            desde Altas trabadas, que es donde está el motivo del fallo a la
-            vista.
+            Esta cuenta está trabada. El CUIT, la razón social y el CVU se
+            corrigen desde Altas trabadas.
           </Aviso>
         ) : null}
       </Panel>

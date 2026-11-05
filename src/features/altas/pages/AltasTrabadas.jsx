@@ -7,16 +7,13 @@ import {
   reintentarAlta,
   sincronizar,
 } from "../store/altasSlice";
-import { describirMotivo } from "src/lib/adaptadores";
 import { Aviso, Bajada, Chip, Panel, Tabla, Titulo } from "components/Panel";
 import Confirmacion from "components/Confirmacion";
 import AccionesAlta from "../components/AccionesAlta";
 
 const AltasTrabadas = () => {
   const dispatch = useDispatch();
-  const { trabadas, cargando, error, fallosPorCuenta } = useSelector(
-    (s) => s.altas
-  );
+  const { trabadas, cargando, error } = useSelector((s) => s.altas);
   const [confirmar, setConfirmar] = useState(null);
 
   useEffect(() => {
@@ -52,17 +49,12 @@ const AltasTrabadas = () => {
                 <th>Client id</th>
                 <th>Cuenta</th>
                 <th>Sujeto</th>
-                <th>Motivo del fallo</th>
                 <th>Legajo</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {trabadas.map((c) => {
-                const motivo = describirMotivo(
-                  c.ultimoError,
-                  fallosPorCuenta[c.cuentaIdExterno]
-                );
                 const refExterna = c.refExterna ?? c.legajo?.refExterna ?? null;
                 return (
                   <tr key={c.cuentaIdExterno}>
@@ -71,13 +63,6 @@ const AltasTrabadas = () => {
                     </td>
                     <td>{c.cuentaIdExterno}</td>
                     <td>{c.sujetoVerificadoId ?? "—"}</td>
-                    <td>
-                      <Chip>{motivo.clase}</Chip>
-                      <br />
-                      <strong>{motivo.titulo}</strong>
-                      <br />
-                      <small>{motivo.detalle}</small>
-                    </td>
                     <td>
                       {c.legajo ? (
                         <Chip>{c.legajo.estado}</Chip>
@@ -94,19 +79,13 @@ const AltasTrabadas = () => {
                             accion: "reintentarAlta",
                             accionAEjecutar: reintentarAlta({
                               refExterna,
-                              cuentaIdExterno: c.cuentaIdExterno,
                               cuit,
                               name,
                             }),
                           })
                         }
                         onSincronizarPermisos={() =>
-                          dispatch(
-                            sincronizar({
-                              refExterna,
-                              cuentaIdExterno: c.cuentaIdExterno,
-                            })
-                          )
+                          dispatch(sincronizar({ refExterna }))
                         }
                         onInformarCvu={(cvu) =>
                           setConfirmar({
