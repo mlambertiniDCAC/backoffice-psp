@@ -64,6 +64,7 @@ const AltasTrabadas = () => {
           <Tabla>
             <thead>
               <tr>
+                <th>Client id</th>
                 <th>Cuenta</th>
                 <th>Sujeto</th>
                 <th>CUIT / titular</th>
@@ -76,9 +77,12 @@ const AltasTrabadas = () => {
               {trabadas.map((c) => {
                 const fallo = fallosPorCuenta[c.cuentaIdExterno];
                 const motivo = describirMotivo(c.ultimoError, fallo);
-                const refExterna = c.legajo?.refExterna ?? null;
+                const refExterna = c.refExterna ?? c.legajo?.refExterna ?? null;
                 return (
                   <tr key={c.cuentaIdExterno}>
+                    <td>
+                      <strong>{c.clientId ?? "—"}</strong>
+                    </td>
                     <td>{c.cuentaIdExterno}</td>
                     <td>{c.sujetoVerificadoId ?? "—"}</td>
                     <td>
@@ -109,7 +113,7 @@ const AltasTrabadas = () => {
                           title={
                             refExterna
                               ? "Relee la cuenta y rehace cuenta, vínculos y permisos"
-                              : "Sin ref_externa no se puede sincronizar"
+                              : "Sin client_id no se puede sincronizar"
                           }
                           onClick={() =>
                             dispatch(

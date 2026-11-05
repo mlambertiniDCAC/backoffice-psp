@@ -5,6 +5,7 @@ import {
   adaptarCuenta,
   estaTrabada,
   adaptarFilaLegajo,
+  refExternaDe,
 } from "src/lib/adaptadores";
 import { getApiErrorMessage } from "src/lib/apiError";
 
@@ -26,6 +27,7 @@ export const cargarTrabadas = createAsyncThunk(
       return trabadas.map((c) => ({
         ...c,
         legajo: porSujeto.get(Number(c.sujetoVerificadoId)) ?? null,
+        refExterna: refExternaDe(c),
       }));
     } catch (error) {
       return rejectWithValue(getApiErrorMessage(error));
