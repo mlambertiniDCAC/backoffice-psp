@@ -37,7 +37,7 @@ export const cargarTrabadas = createAsyncThunk(
 
 const fallo = (cuentaIdExterno, error) => ({
   cuentaIdExterno,
-  mensaje: getApiErrorMessage(error),
+  mensaje: error?.response?.data?.error?.message ?? getApiErrorMessage(error),
   status: error?.response?.status ?? null,
 });
 

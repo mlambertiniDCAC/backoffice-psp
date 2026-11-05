@@ -203,8 +203,8 @@ const DetalleLegajo = () => {
               onChange={(e) => setCuit(e.target.value)}
             />
             <input
-              aria-label="Titular"
-              placeholder="Titular / razón social"
+              aria-label="Razón social"
+              placeholder="Razón social"
               value={titular}
               onChange={(e) => setTitular(e.target.value)}
             />

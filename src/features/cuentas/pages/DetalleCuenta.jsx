@@ -67,7 +67,7 @@ const DetalleCuenta = () => {
               <td>{cuenta.cuit ?? "—"}</td>
             </tr>
             <tr>
-              <th>Titular</th>
+              <th>Razón social</th>
               <td>{cuenta.titular ?? "—"}</td>
             </tr>
             <tr>

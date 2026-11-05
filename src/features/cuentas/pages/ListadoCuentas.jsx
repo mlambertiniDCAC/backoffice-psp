@@ -78,7 +78,7 @@ const ListadoCuentas = () => {
                   <th>Cuenta</th>
                   <th>Sujeto</th>
                   <th>CUIT</th>
-                  <th>Titular</th>
+                  <th>Razón social</th>
                   <th>CVU</th>
                   <th>Situación</th>
                   <th />

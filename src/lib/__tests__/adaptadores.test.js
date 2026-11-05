@@ -96,15 +96,34 @@ describe("describirMotivo", () => {
     expect(r.titulo).not.toMatch(/bridge/i);
   });
 
-  it("no presenta el texto crudo de un 502 del gateway como la causa", () => {
+  it("muestra el 5xx y explica por qué no llega el código de BIND", () => {
     const r = describirMotivo(null, {
       response: {
         status: 502,
         data: { error: { message: "cuentas: el servicio respondió 502" } },
       },
     });
-    expect(r.clase).toBe("desconocido");
-    expect(r.detalle).not.toMatch(/respondió 502/);
+    expect(r.titulo).toMatch(/502/);
+    expect(r.detalle).toMatch(/cuentas: el servicio respondió 502/);
+    expect(r.detalle).toMatch(/psp_bridge_errors/);
+  });
+
+  it("muestra el mensaje del gateway tal cual en un 4xx", () => {
+    const r = describirMotivo(null, {
+      response: {
+        status: 409,
+        data: { error: { message: "tiene otro CUIT" } },
+      },
+    });
+    expect(r.clase).toBe("rechazo");
+    expect(r.detalle).toBe("tiene otro CUIT");
+  });
+
+  it("distingue no haber tenido respuesta de no haber intentado", () => {
+    expect(describirMotivo(null, { mensaje: "Network Error" }).clase).toBe(
+      "transporte"
+    );
+    expect(describirMotivo(null, null).titulo).toMatch(/sin intento/i);
   });
 
   it("no explota sin motivo registrado", () => {

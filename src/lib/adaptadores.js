@@ -80,27 +80,38 @@ export const describirMotivo = (ultimoError, error) => {
   }
 
   const status = error?.response?.status ?? error?.status ?? null;
+  const mensajeDelGateway =
+    error?.response?.data?.error?.message ?? error?.mensaje ?? null;
+
   if (status && status >= 500) {
     return {
       clase: "desconocido",
-      titulo: "El servicio no pudo responder",
-      detalle: "El motivo real no llega en un 5xx. Ver los logs del servicio.",
+      titulo: `El servicio respondió ${status}`,
+      detalle:
+        (mensajeDelGateway ? `${mensajeDelGateway}. ` : "") +
+        "El código de BIND no viaja en un 5xx: ms-psp lo envuelve en un 502 y el gateway reemplaza el cuerpo. El motivo real está en psp.psp_bridge_errors.",
     };
   }
   if (status) {
     return {
       clase: "rechazo",
-      titulo: "La operación fue rechazada",
+      titulo: `La operación fue rechazada (${status})`,
+      detalle: mensajeDelGateway ?? "Sin detalle.",
+    };
+  }
+  if (error) {
+    return {
+      clase: "transporte",
+      titulo: "No hubo respuesta",
       detalle:
-        error?.response?.data?.error?.message ??
-        error?.mensaje ??
-        "Sin detalle.",
+        (mensajeDelGateway ? `${mensajeDelGateway}. ` : "") +
+        "El pedido no llegó o la respuesta no se pudo leer. Mirá la consola por un error de CORS.",
     };
   }
   return {
     clase: "desconocido",
-    titulo: "Sin motivo todavía",
+    titulo: "Sin intento todavía",
     detalle:
-      "El backend no guarda el motivo del alta fallida: aparece recién cuando reintentás, en la respuesta de esa llamada.",
+      "El backend no guarda el motivo del alta fallida. Aparece acá en cuanto reintentes, con lo que devuelva esa llamada.",
   };
 };

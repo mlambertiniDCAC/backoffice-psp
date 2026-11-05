@@ -53,8 +53,8 @@ const AccionesAlta = ({
           onChange={(e) => setCuit(e.target.value)}
         />
         <input
-          aria-label={`Titular de ${cuenta.cuentaIdExterno}`}
-          placeholder="Titular (sin comas ni < >)"
+          aria-label={`Razón social de ${cuenta.cuentaIdExterno}`}
+          placeholder="Razón social (sin comas ni < >)"
           value={titular}
           onChange={(e) => setTitular(e.target.value)}
         />
