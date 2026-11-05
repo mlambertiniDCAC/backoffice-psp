@@ -35,13 +35,17 @@ export const cargarTrabadas = createAsyncThunk(
 
 export const sincronizar = createAsyncThunk(
   "altas/sincronizar",
-  async ({ refExterna }, { rejectWithValue, dispatch }) => {
+  async ({ refExterna, cuentaIdExterno }, { rejectWithValue, dispatch }) => {
     try {
       const resultado = await sincronizarPermisos(refExterna);
       dispatch(cargarTrabadas());
       return resultado;
     } catch (error) {
-      return rejectWithValue(getApiErrorMessage(error));
+      return rejectWithValue({
+        cuentaIdExterno,
+        mensaje: getApiErrorMessage(error),
+        status: error?.response?.status ?? null,
+      });
     }
   }
 );
@@ -83,11 +87,15 @@ const altasSlice = createSlice({
     cargando: false,
     error: null,
     ultimoResultado: null,
+    fallosPorCuenta: {},
   },
   reducers: {
     limpiar: (state) => {
       state.error = null;
       state.ultimoResultado = null;
+    },
+    limpiarFallo: (state, action) => {
+      delete state.fallosPorCuenta[action.payload];
     },
   },
   extraReducers: (builder) => {
@@ -107,7 +115,13 @@ const altasSlice = createSlice({
       .addMatcher(
         (a) => a.type.startsWith("altas/") && a.type.endsWith("/rejected"),
         (state, action) => {
-          state.error = action.payload ?? state.error;
+          const p = action.payload;
+          if (p && typeof p === "object" && p.cuentaIdExterno) {
+            state.fallosPorCuenta[p.cuentaIdExterno] = p;
+            state.error = p.mensaje;
+          } else {
+            state.error = p ?? state.error;
+          }
         }
       )
       .addMatcher(
@@ -122,5 +136,5 @@ const altasSlice = createSlice({
   },
 });
 
-export const { limpiar } = altasSlice.actions;
+export const { limpiar, limpiarFallo } = altasSlice.actions;
 export default altasSlice.reducer;

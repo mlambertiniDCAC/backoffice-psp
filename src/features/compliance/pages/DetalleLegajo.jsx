@@ -38,12 +38,14 @@ const DetalleLegajo = () => {
   const dispatch = useDispatch();
   const { detalle, personas, cargandoDetalle, error, resultadoAccion } =
     useSelector((s) => s.compliance);
-  const refExterna = useSelector(
+  const refDerivada = useSelector(
     (s) =>
       s.compliance.filas.find(
         (f) => String(f.sujetoVerificadoId) === String(sujetoVerificadoId)
       )?.refExterna ?? null
   );
+  const [refTipeada, setRefTipeada] = useState("");
+  const refExterna = refDerivada ?? (refTipeada.trim() || null);
 
   const [cuit, setCuit] = useState("");
   const [titular, setTitular] = useState("");
@@ -82,8 +84,28 @@ const DetalleLegajo = () => {
       <Titulo>Legajo {sujetoVerificadoId}</Titulo>
       <Bajada>
         Estado actual: <Chip>{estado ?? "—"}</Chip>
-        {refExterna ? ` · ref externa ${refExterna}` : " · sin ref externa"}
+        {refDerivada ? ` · ref externa ${refDerivada}` : null}
       </Bajada>
+
+      {!refDerivada ? (
+        <Panel>
+          <h2>Ref externa</h2>
+          <Bajada>
+            Este sujeto todavía no tiene cuenta CVU, así que la ref externa no
+            se puede derivar del listado de cuentas. Es el id de la sociedad en
+            la plataforma origen, y lo necesitan aceptar, bloquear, desbloquear
+            y sincronizar.
+          </Bajada>
+          <Fila>
+            <input
+              aria-label="Ref externa"
+              placeholder="id de la sociedad en la plataforma origen"
+              value={refTipeada}
+              onChange={(e) => setRefTipeada(e.target.value)}
+            />
+          </Fila>
+        </Panel>
+      ) : null}
 
       {error ? <Aviso $tono="error">{error}</Aviso> : null}
       {resultadoAccion?.estado === "permisos_pendientes" ? (

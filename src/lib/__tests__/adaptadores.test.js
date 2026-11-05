@@ -5,6 +5,7 @@ import {
   cruzarLegajosConCuentas,
   describirMotivo,
   estaTrabada,
+  refExternaDe,
 } from "../adaptadores";
 
 describe("adaptarFilaLegajo", () => {
@@ -108,5 +109,51 @@ describe("describirMotivo", () => {
 
   it("no explota sin motivo registrado", () => {
     expect(describirMotivo(null, null).clase).toBe("desconocido");
+  });
+});
+
+describe("refExterna derivada del client_id de la cuenta", () => {
+  it("usa el client_id de la cuenta como ref_externa del legajo", () => {
+    const legajos = [
+      adaptarFilaLegajo({ id: 1, sujeto_verificado_fillable: 42 }),
+    ];
+    const cuentas = [
+      adaptarCuenta({
+        sujeto_verificado_id: 42,
+        client_id: 25485,
+        cuenta_id_externo: "abc",
+      }),
+    ];
+    const [cruzado] = cruzarLegajosConCuentas(legajos, cuentas);
+    expect(cruzado.refExterna).toBe("25485");
+  });
+
+  it("no sobreescribe la ref_externa si el listado ya la trajo", () => {
+    const legajos = [
+      adaptarFilaLegajo({
+        id: 1,
+        sujeto_verificado_fillable: 42,
+        ref_externa: "99",
+      }),
+    ];
+    const cuentas = [
+      adaptarCuenta({ sujeto_verificado_id: 42, client_id: 25485 }),
+    ];
+    const [cruzado] = cruzarLegajosConCuentas(legajos, cuentas);
+    expect(cruzado.refExterna).toBe("99");
+  });
+
+  it("deja la ref_externa en null si el sujeto todavía no tiene cuenta", () => {
+    const legajos = [
+      adaptarFilaLegajo({ id: 1, sujeto_verificado_fillable: 42 }),
+    ];
+    const [cruzado] = cruzarLegajosConCuentas(legajos, []);
+    expect(cruzado.refExterna).toBeNull();
+    expect(cruzado.cuenta).toBeNull();
+  });
+
+  it("refExternaDe tolera un client_id cero", () => {
+    expect(refExternaDe({ clientId: 0 })).toBe("0");
+    expect(refExternaDe(null)).toBeNull();
   });
 });

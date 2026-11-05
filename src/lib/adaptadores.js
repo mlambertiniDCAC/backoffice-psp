@@ -31,16 +31,25 @@ export const adaptarCuenta = (fila) => ({
 export const estaTrabada = (cuenta) =>
   cuenta?.situacion === SITUACIONES_CUENTA.EN_PROCESO && !cuenta?.cvu;
 
+export const refExternaDe = (cuenta) =>
+  cuenta?.clientId === null || cuenta?.clientId === undefined
+    ? null
+    : String(cuenta.clientId);
+
 export const cruzarLegajosConCuentas = (legajos, cuentas) => {
   const porSujeto = new Map(
     cuentas
       .filter((c) => c.sujetoVerificadoId !== null)
       .map((c) => [Number(c.sujetoVerificadoId), c])
   );
-  return legajos.map((legajo) => ({
-    ...legajo,
-    cuenta: porSujeto.get(Number(legajo.sujetoVerificadoId)) ?? null,
-  }));
+  return legajos.map((legajo) => {
+    const cuenta = porSujeto.get(Number(legajo.sujetoVerificadoId)) ?? null;
+    return {
+      ...legajo,
+      cuenta,
+      refExterna: legajo.refExterna ?? refExternaDe(cuenta),
+    };
+  });
 };
 
 const CLASE_TRANSPORTE = new Set(["SIN_RESPUESTA"]);
@@ -70,7 +79,7 @@ export const describirMotivo = (ultimoError, error) => {
     };
   }
 
-  const status = error?.response?.status;
+  const status = error?.response?.status ?? error?.status ?? null;
   if (status && status >= 500) {
     return {
       clase: "desconocido",
@@ -82,12 +91,16 @@ export const describirMotivo = (ultimoError, error) => {
     return {
       clase: "rechazo",
       titulo: "La operación fue rechazada",
-      detalle: error?.response?.data?.error?.message ?? "Sin detalle.",
+      detalle:
+        error?.response?.data?.error?.message ??
+        error?.mensaje ??
+        "Sin detalle.",
     };
   }
   return {
     clase: "desconocido",
-    titulo: "Sin motivo registrado",
-    detalle: "No hay un fallo guardado para esta cuenta.",
+    titulo: "Sin motivo todavía",
+    detalle:
+      "El backend no guarda el motivo del alta fallida: aparece recién cuando reintentás, en la respuesta de esa llamada.",
   };
 };

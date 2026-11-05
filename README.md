@@ -52,8 +52,15 @@ La trampa del dominio, y el front la modela explícita:
 | `sujeto_verificado_id` | el resto de `/v1/compliance`, y todo `/v1/admin/compliance`  |
 | `cuentaIdExterno`      | todo `/v1/cuentas`                                           |
 
-Si el listado no trae `ref_externa`, las acciones que la necesitan quedan
-deshabilitadas con el motivo a la vista, en vez de pegarle a una URL inválida.
+El listado de compliance devuelve `sujeto_verificado_id`, no `ref_externa`. **La
+`ref_externa` se deriva del `client_id` de la cuenta CVU**: el gateway crea la cuenta
+con `clientId: Number(refExterna)`, así que son el mismo valor. El front cruza el
+listado de compliance contra `GET /v1/cuentas` por `sujeto_verificado_id` y toma el
+`client_id` — el mismo cruce que ya hace para mostrar el estado de la cuenta.
+
+Un sujeto que todavía no tiene cuenta no tiene de dónde derivarla; en ese caso el
+detalle del legajo pide la `ref_externa` a mano, que es el id de la sociedad en la
+plataforma origen.
 
 ## Estructura
 

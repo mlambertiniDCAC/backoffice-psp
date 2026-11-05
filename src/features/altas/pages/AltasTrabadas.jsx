@@ -22,7 +22,9 @@ import CorregirTitular from "../components/CorregirTitular";
 
 const AltasTrabadas = () => {
   const dispatch = useDispatch();
-  const { trabadas, cargando, error } = useSelector((s) => s.altas);
+  const { trabadas, cargando, error, fallosPorCuenta } = useSelector(
+    (s) => s.altas
+  );
   const [cvus, setCvus] = useState({});
   const [confirmar, setConfirmar] = useState(null);
 
@@ -72,7 +74,8 @@ const AltasTrabadas = () => {
             </thead>
             <tbody>
               {trabadas.map((c) => {
-                const motivo = describirMotivo(c.ultimoError, null);
+                const fallo = fallosPorCuenta[c.cuentaIdExterno];
+                const motivo = describirMotivo(c.ultimoError, fallo);
                 const refExterna = c.legajo?.refExterna ?? null;
                 return (
                   <tr key={c.cuentaIdExterno}>
@@ -108,7 +111,14 @@ const AltasTrabadas = () => {
                               ? "Relee la cuenta y rehace cuenta, vínculos y permisos"
                               : "Sin ref_externa no se puede sincronizar"
                           }
-                          onClick={() => dispatch(sincronizar({ refExterna }))}
+                          onClick={() =>
+                            dispatch(
+                              sincronizar({
+                                refExterna,
+                                cuentaIdExterno: c.cuentaIdExterno,
+                              })
+                            )
+                          }
                         >
                           Reintentar (sincronizar)
                         </Boton>

@@ -75,8 +75,8 @@ const BandejaCompliance = () => {
                     <td>{f.sujetoVerificadoId ?? "—"}</td>
                     <td>
                       {f.refExterna ?? (
-                        <Chip title="El listado no trajo ref_externa: las acciones que la necesitan quedan deshabilitadas">
-                          sin ref_externa
+                        <Chip title="Se deriva del client_id de la cuenta CVU. Este sujeto todavía no tiene cuenta, así que se tipea en el detalle.">
+                          sin cuenta aún
                         </Chip>
                       )}
                     </td>
