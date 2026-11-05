@@ -37,15 +37,22 @@ export const cargarBandeja = createAsyncThunk(
   }
 );
 
+const estadoDelResumen = async (sujetoVerificadoId) => {
+  const paginado = await api.listarCompliances({ sujetoVerificadoId });
+  const filas = paginado?.data ?? paginado ?? [];
+  return filas[0]?.estado ?? null;
+};
+
 export const cargarDetalle = createAsyncThunk(
   "compliance/cargarDetalle",
   async (sujetoVerificadoId, { rejectWithValue }) => {
     try {
-      const [detalle, personas] = await Promise.all([
+      const [detalle, personas, estadoLegajo] = await Promise.all([
         api.obtenerCompliance(sujetoVerificadoId),
         api.listarPersonas(sujetoVerificadoId).catch(() => []),
+        estadoDelResumen(sujetoVerificadoId).catch(() => null),
       ]);
-      return { detalle, personas };
+      return { detalle, personas, estadoLegajo };
     } catch (error) {
       return rejectWithValue(getApiErrorMessage(error));
     }
@@ -141,6 +148,7 @@ const complianceSlice = createSlice({
     cargando: false,
     error: null,
     detalle: null,
+    estadoLegajo: null,
     personas: [],
     cargandoDetalle: false,
     resultadoAccion: null,
@@ -172,10 +180,12 @@ const complianceSlice = createSlice({
         state.cargandoDetalle = true;
         state.error = null;
         state.detalle = null;
+        state.estadoLegajo = null;
       })
       .addCase(cargarDetalle.fulfilled, (state, action) => {
         state.cargandoDetalle = false;
         state.detalle = action.payload.detalle;
+        state.estadoLegajo = action.payload.estadoLegajo ?? null;
         state.personas = action.payload.personas ?? [];
       })
       .addCase(cargarDetalle.rejected, (state, action) => {

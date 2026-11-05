@@ -36,8 +36,14 @@ const ACCIONES_POR_ESTADO = {
 const DetalleLegajo = () => {
   const { sujetoVerificadoId } = useParams();
   const dispatch = useDispatch();
-  const { detalle, personas, cargandoDetalle, error, resultadoAccion } =
-    useSelector((s) => s.compliance);
+  const {
+    detalle,
+    estadoLegajo,
+    personas,
+    cargandoDetalle,
+    error,
+    resultadoAccion,
+  } = useSelector((s) => s.compliance);
   const refDerivada = useSelector(
     (s) =>
       s.compliance.filas.find(
@@ -58,7 +64,7 @@ const DetalleLegajo = () => {
     dispatch(cargarDetalle(sujetoVerificadoId));
   }, [dispatch, sujetoVerificadoId]);
 
-  const estado = detalle?.estado ?? null;
+  const estado = estadoLegajo;
   const permitidas = ACCIONES_POR_ESTADO[estado] ?? [];
   const documentos = detalle?.documentos ?? [];
 
@@ -273,6 +279,14 @@ const DetalleLegajo = () => {
               Reiniciar legajo
             </Peligro>
           </Fila>
+        ) : null}
+
+        {permitidas.length === 0 ? (
+          <Aviso>
+            {estado
+              ? `El legajo está ${estado} y desde ese estado el perímetro no acepta ninguna acción.`
+              : "El legajo no aparece entre los compliances activos. O todavía está en progreso (el usuario no lo envió a revisión), o fue eliminado."}
+          </Aviso>
         ) : null}
       </Panel>
 
