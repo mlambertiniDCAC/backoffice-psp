@@ -1,0 +1,42 @@
+# Multi-stage build for production
+FROM node:20 AS builder
+
+# Set working directory
+WORKDIR /usr/src/app
+
+# Handle MODE build argument
+ARG MODE=production
+ENV BUILD_MODE=${MODE}
+
+# Copy source code (built by Jenkins from git)
+COPY . .
+
+# Install dependencies
+RUN npm install --include=dev
+RUN npm install --no-save axios
+
+# Build the application with the specified mode
+RUN npm run build -- --mode="$BUILD_MODE"
+
+# Production stage
+FROM nginx:alpine AS production
+
+# Copy built assets from builder stage
+COPY --from=builder /usr/src/app/dist /usr/share/nginx/html
+
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Create nginx user and set permissions
+RUN chown -R nginx:nginx /usr/share/nginx/html && \
+    chmod -R 755 /usr/share/nginx/html
+
+# Expose port 80
+EXPOSE 80
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost/ || exit 1
+
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]
