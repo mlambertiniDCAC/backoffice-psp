@@ -36,6 +36,11 @@ const TEXTOS = {
     cuerpo:
       "Esto ejecuta la baja del CVU en el banco. Es irreversible y la cuenta no se puede recuperar.",
   },
+  reintentarAlta: {
+    titulo: "Reintentar el alta en BIND",
+    cuerpo:
+      "Esto crea la cuenta CVU en el banco con el CUIT y el titular que cargaste. La cuenta queda escrita allá y no se deshace desde acá.",
+  },
   informarCvu: {
     titulo: "Informar el CVU",
     cuerpo:

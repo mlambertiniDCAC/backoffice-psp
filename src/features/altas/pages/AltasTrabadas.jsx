@@ -4,28 +4,19 @@ import {
   cargarTrabadas,
   corregirTitular,
   informarCvu,
+  reintentarAlta,
   sincronizar,
 } from "../store/altasSlice";
 import { describirMotivo } from "src/lib/adaptadores";
-import {
-  Aviso,
-  Bajada,
-  Boton,
-  Chip,
-  Fila,
-  Panel,
-  Tabla,
-  Titulo,
-} from "components/Panel";
+import { Aviso, Bajada, Chip, Panel, Tabla, Titulo } from "components/Panel";
 import Confirmacion from "components/Confirmacion";
-import CorregirTitular from "../components/CorregirTitular";
+import AccionesAlta from "../components/AccionesAlta";
 
 const AltasTrabadas = () => {
   const dispatch = useDispatch();
   const { trabadas, cargando, error, fallosPorCuenta } = useSelector(
     (s) => s.altas
   );
-  const [cvus, setCvus] = useState({});
   const [confirmar, setConfirmar] = useState(null);
 
   useEffect(() => {
@@ -34,14 +25,7 @@ const AltasTrabadas = () => {
 
   const ejecutar = () => {
     if (!confirmar) return;
-    if (confirmar.accion === "informarCvu") {
-      dispatch(
-        informarCvu({
-          cuentaIdExterno: confirmar.cuenta.cuentaIdExterno,
-          cvu: cvus[confirmar.cuenta.cuentaIdExterno],
-        })
-      );
-    }
+    dispatch(confirmar.accionAEjecutar);
     setConfirmar(null);
   };
 
@@ -49,8 +33,9 @@ const AltasTrabadas = () => {
     <>
       <Titulo>Altas trabadas</Titulo>
       <Bajada>
-        Cuentas en proceso sin CVU. El reintento oficial es sincronizar: relee
-        la cuenta, toma el CUIT grabado y rehace cuenta, vínculos y permisos.
+        Cuentas en proceso sin CVU. <strong>Reintentar el alta</strong> crea la
+        cuenta en BIND con el CUIT y el titular de los campos: sin esos dos
+        datos el gateway devuelve la cuenta como está y no llama al banco.
       </Bajada>
 
       {error ? <Aviso $tono="error">{error}</Aviso> : null}
@@ -67,7 +52,6 @@ const AltasTrabadas = () => {
                 <th>Client id</th>
                 <th>Cuenta</th>
                 <th>Sujeto</th>
-                <th>CUIT / titular</th>
                 <th>Motivo del fallo</th>
                 <th>Legajo</th>
                 <th>Acciones</th>
@@ -75,8 +59,10 @@ const AltasTrabadas = () => {
             </thead>
             <tbody>
               {trabadas.map((c) => {
-                const fallo = fallosPorCuenta[c.cuentaIdExterno];
-                const motivo = describirMotivo(c.ultimoError, fallo);
+                const motivo = describirMotivo(
+                  c.ultimoError,
+                  fallosPorCuenta[c.cuentaIdExterno]
+                );
                 const refExterna = c.refExterna ?? c.legajo?.refExterna ?? null;
                 return (
                   <tr key={c.cuentaIdExterno}>
@@ -85,11 +71,6 @@ const AltasTrabadas = () => {
                     </td>
                     <td>{c.cuentaIdExterno}</td>
                     <td>{c.sujetoVerificadoId ?? "—"}</td>
-                    <td>
-                      {c.cuit ?? "—"}
-                      <br />
-                      <small>{c.titular ?? "sin titular"}</small>
-                    </td>
                     <td>
                       <Chip>{motivo.clase}</Chip>
                       <br />
@@ -105,55 +86,38 @@ const AltasTrabadas = () => {
                       )}
                     </td>
                     <td>
-                      <Fila>
-                        <Boton
-                          $primario
-                          type="button"
-                          disabled={!refExterna}
-                          title={
-                            refExterna
-                              ? "Relee la cuenta y rehace cuenta, vínculos y permisos"
-                              : "Sin client_id no se puede sincronizar"
-                          }
-                          onClick={() =>
-                            dispatch(
-                              sincronizar({
-                                refExterna,
-                                cuentaIdExterno: c.cuentaIdExterno,
-                              })
-                            )
-                          }
-                        >
-                          Reintentar (sincronizar)
-                        </Boton>
-                      </Fila>
-                      <Fila style={{ marginTop: 6 }}>
-                        <input
-                          aria-label={`CVU para ${c.cuentaIdExterno}`}
-                          placeholder="CVU de 22 dígitos"
-                          value={cvus[c.cuentaIdExterno] ?? ""}
-                          onChange={(e) =>
-                            setCvus((prev) => ({
-                              ...prev,
-                              [c.cuentaIdExterno]: e.target.value,
-                            }))
-                          }
-                        />
-                        <Boton
-                          type="button"
-                          disabled={
-                            !/^\d{22}$/.test(cvus[c.cuentaIdExterno] ?? "")
-                          }
-                          onClick={() =>
-                            setConfirmar({ accion: "informarCvu", cuenta: c })
-                          }
-                        >
-                          Informar CVU
-                        </Boton>
-                      </Fila>
-                      <CorregirTitular
+                      <AccionesAlta
                         cuenta={c}
-                        onGuardar={(cuit, name) =>
+                        refExterna={refExterna}
+                        onReintentarAlta={(cuit, name) =>
+                          setConfirmar({
+                            accion: "reintentarAlta",
+                            accionAEjecutar: reintentarAlta({
+                              refExterna,
+                              cuentaIdExterno: c.cuentaIdExterno,
+                              cuit,
+                              name,
+                            }),
+                          })
+                        }
+                        onSincronizarPermisos={() =>
+                          dispatch(
+                            sincronizar({
+                              refExterna,
+                              cuentaIdExterno: c.cuentaIdExterno,
+                            })
+                          )
+                        }
+                        onInformarCvu={(cvu) =>
+                          setConfirmar({
+                            accion: "informarCvu",
+                            accionAEjecutar: informarCvu({
+                              cuentaIdExterno: c.cuentaIdExterno,
+                              cvu,
+                            }),
+                          })
+                        }
+                        onCorregirTitular={(cuit, name) =>
                           dispatch(
                             corregirTitular({
                               cuentaIdExterno: c.cuentaIdExterno,

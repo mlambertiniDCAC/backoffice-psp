@@ -222,10 +222,10 @@ export const reiniciarCompliance = async (sujetoVerificadoId) => {
   return unwrap(respuesta);
 };
 
-export const sincronizarPermisos = async (refExterna) => {
+export const sincronizarPermisos = async (refExterna, datos) => {
   const respuesta = await axiosInstance.post(
     `${base}/${refExterna}/permisos/sincronizar`,
-    {}
+    datos ?? {}
   );
   return unwrap(respuesta);
 };

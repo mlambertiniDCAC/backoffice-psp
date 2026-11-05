@@ -35,6 +35,28 @@ export const cargarTrabadas = createAsyncThunk(
   }
 );
 
+const fallo = (cuentaIdExterno, error) => ({
+  cuentaIdExterno,
+  mensaje: getApiErrorMessage(error),
+  status: error?.response?.status ?? null,
+});
+
+export const reintentarAlta = createAsyncThunk(
+  "altas/reintentarAlta",
+  async (
+    { refExterna, cuentaIdExterno, cuit, name },
+    { rejectWithValue, dispatch }
+  ) => {
+    try {
+      const resultado = await sincronizarPermisos(refExterna, { cuit, name });
+      dispatch(cargarTrabadas());
+      return resultado;
+    } catch (error) {
+      return rejectWithValue(fallo(cuentaIdExterno, error));
+    }
+  }
+);
+
 export const sincronizar = createAsyncThunk(
   "altas/sincronizar",
   async ({ refExterna, cuentaIdExterno }, { rejectWithValue, dispatch }) => {
@@ -43,11 +65,7 @@ export const sincronizar = createAsyncThunk(
       dispatch(cargarTrabadas());
       return resultado;
     } catch (error) {
-      return rejectWithValue({
-        cuentaIdExterno,
-        mensaje: getApiErrorMessage(error),
-        status: error?.response?.status ?? null,
-      });
+      return rejectWithValue(fallo(cuentaIdExterno, error));
     }
   }
 );

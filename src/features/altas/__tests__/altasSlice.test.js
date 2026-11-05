@@ -65,3 +65,43 @@ describe("cargarTrabadas", () => {
     expect(store.getState().altas.trabadas).toHaveLength(1);
   });
 });
+
+describe("reintentarAlta vs sincronizar", () => {
+  it("el reintento manda cuit y name: sin ellos el gateway no llama al banco", async () => {
+    const { reintentarAlta } = await import("../store/altasSlice");
+    const { sincronizarPermisos } = await import("src/lib/api/compliance");
+    sincronizarPermisos.mockResolvedValue({});
+    listarCuentas.mockResolvedValue([]);
+    listarCompliances.mockResolvedValue({ data: [] });
+    const store = configureStore({ reducer: { altas: reducer } });
+
+    await store.dispatch(
+      reintentarAlta({
+        refExterna: "3421",
+        cuentaIdExterno: "42a68412",
+        cuit: "30712345671",
+        name: "Hirthe",
+      })
+    );
+
+    expect(sincronizarPermisos).toHaveBeenCalledWith("3421", {
+      cuit: "30712345671",
+      name: "Hirthe",
+    });
+  });
+
+  it("sincronizar permisos va sin body, para no tocar el banco", async () => {
+    const { sincronizar } = await import("../store/altasSlice");
+    const { sincronizarPermisos } = await import("src/lib/api/compliance");
+    sincronizarPermisos.mockResolvedValue({});
+    listarCuentas.mockResolvedValue([]);
+    listarCompliances.mockResolvedValue({ data: [] });
+    const store = configureStore({ reducer: { altas: reducer } });
+
+    await store.dispatch(
+      sincronizar({ refExterna: "3421", cuentaIdExterno: "42a68412" })
+    );
+
+    expect(sincronizarPermisos).toHaveBeenCalledWith("3421");
+  });
+});
