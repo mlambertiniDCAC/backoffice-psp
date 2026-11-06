@@ -97,10 +97,9 @@ const DetalleLegajo = () => {
         <Panel>
           <h2>Ref externa</h2>
           <Bajada>
-            Este sujeto todavía no tiene cuenta CVU, así que la ref externa no
-            se puede derivar del listado de cuentas. Es el id de la sociedad en
-            la plataforma origen, y lo necesitan aceptar, bloquear, desbloquear
-            y sincronizar.
+            Este sujeto todavía no tiene cuenta CVU y el listado no trae su ref
+            externa. Es el id de la sociedad en la plataforma origen, y lo
+            necesitan aceptar, bloquear, desbloquear y sincronizar.
           </Bajada>
           <Fila>
             <input

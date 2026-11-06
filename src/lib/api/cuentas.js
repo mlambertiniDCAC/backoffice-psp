@@ -4,13 +4,13 @@ import { unwrap } from "../apiResponse";
 const base = "/v1/cuentas";
 
 export const listarCuentas = async ({
-  clientId,
+  refExterna,
   sujetoVerificadoId,
   activo,
   full,
 } = {}) => {
   const params = {};
-  if (clientId !== undefined) params.clientId = clientId;
+  if (refExterna !== undefined) params.refExterna = refExterna;
   if (sujetoVerificadoId !== undefined)
     params.sujetoVerificadoId = sujetoVerificadoId;
   if (activo !== undefined) params.activo = activo;
@@ -27,13 +27,13 @@ export const obtenerCuenta = async (cuentaIdExterno, full = true) => {
 };
 
 export const crearCuenta = async ({
-  clientId,
+  refExterna,
   sujetoVerificadoId,
   cuit,
   name,
 }) => {
   const respuesta = await axiosInstance.post(base, {
-    clientId,
+    refExterna,
     sujetoVerificadoId,
     cuit,
     name,

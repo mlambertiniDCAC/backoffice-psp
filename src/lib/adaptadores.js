@@ -15,6 +15,7 @@ export const adaptarFilaLegajo = (fila) => ({
 
 export const adaptarCuenta = (fila) => ({
   cuentaIdExterno: fila?.cuenta_id_externo ?? null,
+  refExterna: fila?.ref_externa != null ? String(fila.ref_externa) : null,
   clientId: fila?.client_id ?? null,
   sujetoVerificadoId: fila?.sujeto_verificado_id ?? null,
   cuit: fila?.cuit ?? null,
@@ -31,10 +32,7 @@ export const adaptarCuenta = (fila) => ({
 export const estaTrabada = (cuenta) =>
   cuenta?.situacion === SITUACIONES_CUENTA.EN_PROCESO && !cuenta?.cvu;
 
-export const refExternaDe = (cuenta) =>
-  cuenta?.clientId === null || cuenta?.clientId === undefined
-    ? null
-    : String(cuenta.clientId);
+export const refExternaDe = (cuenta) => cuenta?.refExterna ?? null;
 
 export const cruzarLegajosConCuentas = (legajos, cuentas) => {
   const porSujeto = new Map(

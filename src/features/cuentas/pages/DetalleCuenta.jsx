@@ -70,7 +70,13 @@ const DetalleCuenta = () => {
               <td>{cuenta.moneda ?? "—"}</td>
             </tr>
             <tr>
-              <th>clientId</th>
+              <th>Ref externa</th>
+              <td>{cuenta.refExterna ?? "—"}</td>
+            </tr>
+            <tr>
+              <th title="Identificador interno que se envía a BIND. No es la referencia de la sociedad.">
+                Client id BIND
+              </th>
               <td>{cuenta.clientId ?? "—"}</td>
             </tr>
           </tbody>

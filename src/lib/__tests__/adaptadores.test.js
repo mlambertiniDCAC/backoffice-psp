@@ -73,20 +73,32 @@ describe("cruzarLegajosConCuentas", () => {
   });
 });
 
-describe("refExterna derivada del client_id de la cuenta", () => {
-  it("usa el client_id de la cuenta como ref_externa del legajo", () => {
+describe("refExterna derivada de la cuenta", () => {
+  it("usa la ref_externa de la cuenta como ref_externa del legajo", () => {
     const legajos = [
       adaptarFilaLegajo({ id: 1, sujeto_verificado_fillable: 42 }),
     ];
     const cuentas = [
       adaptarCuenta({
         sujeto_verificado_id: 42,
-        client_id: 25485,
+        ref_externa: "25485",
+        client_id: 7,
         cuenta_id_externo: "abc",
       }),
     ];
     const [cruzado] = cruzarLegajosConCuentas(legajos, cuentas);
     expect(cruzado.refExterna).toBe("25485");
+  });
+
+  it("no deriva la ref del client_id", () => {
+    const legajos = [
+      adaptarFilaLegajo({ id: 1, sujeto_verificado_fillable: 42 }),
+    ];
+    const cuentas = [
+      adaptarCuenta({ sujeto_verificado_id: 42, client_id: 25485 }),
+    ];
+    const [cruzado] = cruzarLegajosConCuentas(legajos, cuentas);
+    expect(cruzado.refExterna).toBeNull();
   });
 
   it("no sobreescribe la ref_externa si el listado ya la trajo", () => {
@@ -98,7 +110,11 @@ describe("refExterna derivada del client_id de la cuenta", () => {
       }),
     ];
     const cuentas = [
-      adaptarCuenta({ sujeto_verificado_id: 42, client_id: 25485 }),
+      adaptarCuenta({
+        sujeto_verificado_id: 42,
+        ref_externa: "25485",
+        client_id: 7,
+      }),
     ];
     const [cruzado] = cruzarLegajosConCuentas(legajos, cuentas);
     expect(cruzado.refExterna).toBe("99");
@@ -113,8 +129,24 @@ describe("refExterna derivada del client_id de la cuenta", () => {
     expect(cruzado.cuenta).toBeNull();
   });
 
-  it("refExternaDe tolera un client_id cero", () => {
-    expect(refExternaDe({ clientId: 0 })).toBe("0");
+  it("refExternaDe devuelve null para null y para una cuenta sin ref", () => {
     expect(refExternaDe(null)).toBeNull();
+    expect(refExternaDe(adaptarCuenta({ client_id: 5 }))).toBeNull();
+  });
+
+  it("adaptarCuenta normaliza una ref_externa numérica a string", () => {
+    expect(adaptarCuenta({ ref_externa: 25485 }).refExterna).toBe("25485");
+    expect(adaptarCuenta({ ref_externa: 0 }).refExterna).toBe("0");
+  });
+
+  it("adaptarCuenta deja refExterna en null si no viene", () => {
+    expect(adaptarCuenta({}).refExterna).toBeNull();
+    expect(adaptarCuenta({ ref_externa: null }).refExterna).toBeNull();
+  });
+
+  it("adaptarCuenta conserva el client_id aparte de la ref", () => {
+    const cuenta = adaptarCuenta({ client_id: 7, ref_externa: "25485" });
+    expect(cuenta.clientId).toBe(7);
+    expect(cuenta.refExterna).toBe("25485");
   });
 });

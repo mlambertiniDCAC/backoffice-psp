@@ -46,7 +46,8 @@ const AltasTrabadas = () => {
           <Tabla>
             <thead>
               <tr>
-                <th>Client id</th>
+                <th>Ref externa</th>
+                <th>Client id BIND</th>
                 <th>Cuenta</th>
                 <th>Sujeto</th>
                 <th>Legajo</th>
@@ -59,8 +60,9 @@ const AltasTrabadas = () => {
                 return (
                   <tr key={c.cuentaIdExterno}>
                     <td>
-                      <strong>{c.clientId ?? "—"}</strong>
+                      <strong>{refExterna ?? "—"}</strong>
                     </td>
+                    <td>{c.clientId ?? "—"}</td>
                     <td>{c.cuentaIdExterno}</td>
                     <td>{c.sujetoVerificadoId ?? "—"}</td>
                     <td>
@@ -74,18 +76,18 @@ const AltasTrabadas = () => {
                       <AccionesAlta
                         cuenta={c}
                         refExterna={refExterna}
-                        onReintentarAlta={(cuit, name) =>
+                        onReintentarAlta={(cuit, name, ref) =>
                           setConfirmar({
                             accion: "reintentarAlta",
                             accionAEjecutar: reintentarAlta({
-                              refExterna,
+                              refExterna: ref,
                               cuit,
                               name,
                             }),
                           })
                         }
-                        onSincronizarPermisos={() =>
-                          dispatch(sincronizar({ refExterna }))
+                        onSincronizarPermisos={(ref) =>
+                          dispatch(sincronizar({ refExterna: ref }))
                         }
                         onInformarCvu={(cvu) =>
                           setConfirmar({
