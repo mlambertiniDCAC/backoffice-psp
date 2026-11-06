@@ -27,6 +27,7 @@ beforeAll(async () => {
 const cuentaTrabada = {
   cuenta_id_externo: "42a68412",
   client_id: 3421,
+  ref_externa: "27118",
   sujeto_verificado_id: 30,
   cuit: "30712345671",
   name: "Hirthe, Adams and Emmerich",
@@ -35,7 +36,7 @@ const cuentaTrabada = {
 };
 
 describe("cargarTrabadas", () => {
-  it("deriva la refExterna del client_id de la cuenta, sin depender del legajo", async () => {
+  it("toma la refExterna de la cuenta, sin depender del legajo", async () => {
     listarCuentas.mockResolvedValue([cuentaTrabada]);
     listarCompliances.mockResolvedValue({ data: [] });
     const store = configureStore({ reducer: { altas: reducer } });
@@ -43,8 +44,22 @@ describe("cargarTrabadas", () => {
     await store.dispatch(cargarTrabadas());
 
     const [fila] = store.getState().altas.trabadas;
-    expect(fila.refExterna).toBe("3421");
+    expect(fila.refExterna).toBe("27118");
+    expect(fila.clientId).toBe(3421);
     expect(fila.legajo).toBeNull();
+  });
+
+  it("una cuenta trabada sin ref_externa queda con refExterna null", async () => {
+    listarCuentas.mockResolvedValue([
+      { ...cuentaTrabada, ref_externa: undefined },
+    ]);
+    listarCompliances.mockResolvedValue({ data: [] });
+    const store = configureStore({ reducer: { altas: reducer } });
+
+    await store.dispatch(cargarTrabadas());
+
+    const [fila] = store.getState().altas.trabadas;
+    expect(fila.refExterna).toBeNull();
   });
 
   it("solo lista cuentas EN_PROCESO sin CVU", async () => {
@@ -77,13 +92,13 @@ describe("reintentarAlta vs sincronizar", () => {
 
     await store.dispatch(
       reintentarAlta({
-        refExterna: "3421",
+        refExterna: "27118",
         cuit: "30712345671",
         name: "Hirthe",
       })
     );
 
-    expect(sincronizarPermisos).toHaveBeenCalledWith("3421", {
+    expect(sincronizarPermisos).toHaveBeenCalledWith("27118", {
       cuit: "30712345671",
       name: "Hirthe",
     });
@@ -97,8 +112,8 @@ describe("reintentarAlta vs sincronizar", () => {
     listarCompliances.mockResolvedValue({ data: [] });
     const store = configureStore({ reducer: { altas: reducer } });
 
-    await store.dispatch(sincronizar({ refExterna: "3421" }));
+    await store.dispatch(sincronizar({ refExterna: "27118" }));
 
-    expect(sincronizarPermisos).toHaveBeenCalledWith("3421");
+    expect(sincronizarPermisos).toHaveBeenCalledWith("27118");
   });
 });
