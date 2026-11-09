@@ -13,8 +13,10 @@ const AccionesAlta = ({
   const [cuit, setCuit] = useState(cuenta.cuit ?? "");
   const [titular, setTitular] = useState(cuenta.titular ?? "");
   const [cvu, setCvu] = useState("");
+  const [refManual, setRefManual] = useState("");
 
-  const sinRef = !refExterna;
+  const refEfectiva = refExterna || refManual.trim();
+  const sinRef = !refEfectiva;
   const faltanDatos = !cuit || !titular;
 
   return (
@@ -26,12 +28,12 @@ const AccionesAlta = ({
           disabled={sinRef || faltanDatos}
           title={
             sinRef
-              ? "Sin client_id no se puede reintentar"
+              ? "Sin ref externa no se puede reintentar el alta"
               : faltanDatos
                 ? "Completá CUIT y titular: el gateway no llama al banco sin ellos"
                 : "Crea la cuenta en BIND con este CUIT y titular, y rehace vínculos y permisos"
           }
-          onClick={() => onReintentarAlta(cuit, titular)}
+          onClick={() => onReintentarAlta(cuit, titular, refEfectiva)}
         >
           Reintentar el alta
         </Boton>
@@ -39,11 +41,22 @@ const AccionesAlta = ({
           type="button"
           disabled={sinRef}
           title="Solo rehace vínculos y permisos. No toca el banco."
-          onClick={onSincronizarPermisos}
+          onClick={() => onSincronizarPermisos(refEfectiva)}
         >
           Sincronizar permisos
         </Boton>
       </Fila>
+
+      {refExterna ? null : (
+        <Fila style={{ marginTop: 6 }}>
+          <input
+            aria-label={`Ref externa de ${cuenta.cuentaIdExterno}`}
+            placeholder="Ref externa (id de la sociedad en la plataforma origen)"
+            value={refManual}
+            onChange={(e) => setRefManual(e.target.value)}
+          />
+        </Fila>
+      )}
 
       <Fila style={{ marginTop: 6 }}>
         <input

@@ -23,7 +23,7 @@ const ListadoCuentas = () => {
   const { cargando, error, lista, pagina } = useSelector((s) => s.cuentas);
   const visibles = useSelector(selectPagina);
   const totalPaginas = useSelector(selectTotalPaginas);
-  const [clientId, setClientId] = useState("");
+  const [refExterna, setRefExterna] = useState("");
 
   useEffect(() => {
     dispatch(cargarCuentas());
@@ -42,15 +42,15 @@ const ListadoCuentas = () => {
       <Panel>
         <Fila>
           <input
-            aria-label="Filtrar por clientId"
-            placeholder="clientId"
-            value={clientId}
-            onChange={(e) => setClientId(e.target.value)}
+            aria-label="Filtrar por ref externa"
+            placeholder="Ref externa"
+            value={refExterna}
+            onChange={(e) => setRefExterna(e.target.value)}
           />
           <Boton
             type="button"
             onClick={() =>
-              dispatch(cargarCuentas(clientId ? { clientId } : {}))
+              dispatch(cargarCuentas(refExterna ? { refExterna } : {}))
             }
           >
             Filtrar
@@ -58,7 +58,7 @@ const ListadoCuentas = () => {
           <Boton
             type="button"
             onClick={() => {
-              setClientId("");
+              setRefExterna("");
               dispatch(cargarCuentas());
             }}
           >
@@ -77,6 +77,7 @@ const ListadoCuentas = () => {
                 <tr>
                   <th>Cuenta</th>
                   <th>Sujeto</th>
+                  <th>Ref externa</th>
                   <th>CUIT</th>
                   <th>Razón social</th>
                   <th>CVU</th>
@@ -87,13 +88,14 @@ const ListadoCuentas = () => {
               <tbody>
                 {visibles.length === 0 ? (
                   <tr>
-                    <td colSpan={7}>Sin cuentas.</td>
+                    <td colSpan={8}>Sin cuentas.</td>
                   </tr>
                 ) : (
                   visibles.map((c) => (
                     <tr key={c.cuentaIdExterno}>
                       <td>{c.cuentaIdExterno}</td>
                       <td>{c.sujetoVerificadoId ?? "—"}</td>
+                      <td>{c.refExterna ?? "—"}</td>
                       <td>{c.cuit ?? "—"}</td>
                       <td>{c.titular ?? "—"}</td>
                       <td>{c.cvu ?? "—"}</td>

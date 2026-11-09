@@ -75,8 +75,14 @@ const BandejaCompliance = () => {
                     <td>{f.sujetoVerificadoId ?? "—"}</td>
                     <td>
                       {f.refExterna ?? (
-                        <Chip title="Se deriva del client_id de la cuenta CVU. Este sujeto todavía no tiene cuenta, así que se tipea en el detalle.">
-                          sin cuenta aún
+                        <Chip
+                          title={
+                            f.cuenta
+                              ? "La cuenta CVU no trae la ref externa, así que se tipea en el detalle."
+                              : "La ref externa viene de la cuenta CVU. Este sujeto todavía no tiene cuenta, así que se tipea en el detalle."
+                          }
+                        >
+                          {f.cuenta ? "sin ref externa" : "sin cuenta aún"}
                         </Chip>
                       )}
                     </td>
