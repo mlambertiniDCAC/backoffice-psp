@@ -34,6 +34,13 @@ export const estaTrabada = (cuenta) =>
 
 export const refExternaDe = (cuenta) => cuenta?.refExterna ?? null;
 
+export const nombreDeTipoDocumento = (tipo) => {
+  if (typeof tipo === "string") {
+    return tipo || null;
+  }
+  return tipo?.nombre ?? tipo?.codigo ?? null;
+};
+
 export const cruzarLegajosConCuentas = (legajos, cuentas) => {
   const porSujeto = new Map(
     cuentas
