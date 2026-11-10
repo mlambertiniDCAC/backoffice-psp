@@ -1,6 +1,7 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
 import { ESTADOS_DOCUMENTO_REVISION } from "src/lib/constants";
+import { nombreDeTipoDocumento } from "src/lib/adaptadores";
 import { Boton, Chip, Fila } from "components/Panel";
 
 const DocumentoFila = ({ documento, onRevisar }) => {
@@ -10,7 +11,11 @@ const DocumentoFila = ({ documento, onRevisar }) => {
 
   return (
     <tr>
-      <td>{documento.tipo ?? documento.documento_tipo ?? "—"}</td>
+      <td>
+        {nombreDeTipoDocumento(documento.tipo) ??
+          documento.documento_tipo ??
+          "—"}
+      </td>
       <td>
         <Chip>{documento.estado ?? "—"}</Chip>
       </td>
@@ -69,7 +74,13 @@ const DocumentoFila = ({ documento, onRevisar }) => {
 DocumentoFila.propTypes = {
   documento: PropTypes.shape({
     id: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
-    tipo: PropTypes.string,
+    tipo: PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.shape({
+        codigo: PropTypes.string,
+        nombre: PropTypes.string,
+      }),
+    ]),
     documento_tipo: PropTypes.string,
     estado: PropTypes.string,
     url: PropTypes.string,
