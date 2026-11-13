@@ -23,6 +23,14 @@ export const obtenerUsuario = async (usuarioSub) => {
   return unwrap(respuesta);
 };
 
+export const revocarIdentidad = async (usuarioSub, motivo) => {
+  const respuesta = await axiosInstance.post(
+    `${base}/usuarios/${encodeURIComponent(usuarioSub)}/revocar`,
+    { motivo }
+  );
+  return unwrap(respuesta);
+};
+
 export const consultarIdentidadEnProveedor = async (
   validacionId,
   { imagenes = false } = {}

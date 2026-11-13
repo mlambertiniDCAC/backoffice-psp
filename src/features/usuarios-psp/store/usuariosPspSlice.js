@@ -4,6 +4,7 @@ import {
   AVISO_BUSQUEDA_CORTA,
   MINIMO_TEXTO_BUSQUEDA,
   adaptarConsultaProveedor,
+  adaptarIdentidad,
   adaptarUsuarioPsp,
 } from "src/lib/identidad";
 import { getApiErrorMessage } from "src/lib/apiError";
@@ -48,6 +49,17 @@ export const cargarUsuario = createAsyncThunk(
   }
 );
 
+export const revocarIdentidadDeUsuario = createAsyncThunk(
+  "usuariosPsp/revocarIdentidad",
+  async ({ usuarioSub, motivo }, { rejectWithValue }) => {
+    try {
+      return adaptarIdentidad(await api.revocarIdentidad(usuarioSub, motivo));
+    } catch (error) {
+      return rejectWithValue(getApiErrorMessage(error));
+    }
+  }
+);
+
 export const consultarProveedor = createAsyncThunk(
   "usuariosPsp/consultarProveedor",
   async ({ validacionId }, { rejectWithValue }) => {
@@ -78,6 +90,14 @@ export const traerImagenesDelProveedor = createAsyncThunk(
   }
 );
 
+const conLaRevocacion = (previa, revocada) => ({
+  ...previa,
+  validada: revocada.validada,
+  revocadaEn: revocada.revocadaEn ?? previa.revocadaEn,
+  revocadaPor: revocada.revocadaPor ?? previa.revocadaPor,
+  motivoRevocacion: revocada.motivoRevocacion ?? previa.motivoRevocacion,
+});
+
 const proveedorVacio = () => ({
   cargando: false,
   cargandoImagenes: false,
@@ -98,6 +118,7 @@ const usuariosPspSlice = createSlice({
     error: null,
     usuario: null,
     cargandoUsuario: false,
+    revocando: false,
     proveedor: proveedorVacio(),
   },
   reducers: {
@@ -131,6 +152,22 @@ const usuariosPspSlice = createSlice({
       .addCase(cargarUsuario.fulfilled, (state, action) => {
         state.cargandoUsuario = false;
         state.usuario = action.payload;
+      })
+      .addCase(revocarIdentidadDeUsuario.pending, (state) => {
+        state.revocando = true;
+        state.error = null;
+      })
+      .addCase(revocarIdentidadDeUsuario.fulfilled, (state, action) => {
+        state.revocando = false;
+        if (!state.usuario) return;
+        state.usuario.identidad = conLaRevocacion(
+          state.usuario.identidad,
+          action.payload
+        );
+      })
+      .addCase(revocarIdentidadDeUsuario.rejected, (state, action) => {
+        state.revocando = false;
+        state.error = action.payload ?? state.error;
       })
       .addCase(cargarUsuarios.rejected, (state, action) => {
         state.cargando = false;
