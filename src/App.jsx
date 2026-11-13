@@ -9,6 +9,8 @@ import AltasTrabadas from "./features/altas/pages/AltasTrabadas";
 import ListadoCuentas from "./features/cuentas/pages/ListadoCuentas";
 import DetalleCuenta from "./features/cuentas/pages/DetalleCuenta";
 import UsuariosYPermisos from "./features/usuarios/pages/UsuariosYPermisos";
+import ListadoUsuarios from "./features/usuarios-psp/pages/ListadoUsuarios";
+import DetalleUsuario from "./features/usuarios-psp/pages/DetalleUsuario";
 
 const App = () => {
   const autenticado = useSelector(selectAutenticado);
@@ -28,6 +30,8 @@ const App = () => {
         <Route path="/cuentas" element={<ListadoCuentas />} />
         <Route path="/cuentas/:cuentaIdExterno" element={<DetalleCuenta />} />
         <Route path="/usuarios" element={<UsuariosYPermisos />} />
+        <Route path="/usuarios-psp" element={<ListadoUsuarios />} />
+        <Route path="/usuarios-psp/:usuarioSub" element={<DetalleUsuario />} />
         <Route path="*" element={<Navigate to="/compliance" replace />} />
       </Routes>
     </Shell>
