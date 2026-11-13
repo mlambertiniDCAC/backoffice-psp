@@ -8,7 +8,8 @@ const SECCIONES = [
   { to: "/compliance", label: "Compliance" },
   { to: "/altas", label: "Altas trabadas" },
   { to: "/cuentas", label: "Cuentas" },
-  { to: "/usuarios", label: "Usuarios y permisos" },
+  { to: "/usuarios", label: "Permisos por cuenta" },
+  { to: "/usuarios-psp", label: "Usuarios" },
 ];
 
 const Marco = styled.div`

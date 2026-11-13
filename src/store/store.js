@@ -4,6 +4,7 @@ import complianceReducer from "../features/compliance/store/complianceSlice";
 import altasReducer from "../features/altas/store/altasSlice";
 import cuentasReducer from "../features/cuentas/store/cuentasSlice";
 import usuariosReducer from "../features/usuarios/store/usuariosSlice";
+import usuariosPspReducer from "../features/usuarios-psp/store/usuariosPspSlice";
 
 const appReducer = combineReducers({
   auth: authReducer,
@@ -11,6 +12,7 @@ const appReducer = combineReducers({
   altas: altasReducer,
   cuentas: cuentasReducer,
   usuarios: usuariosReducer,
+  usuariosPsp: usuariosPspReducer,
 });
 
 export const rootReducer = (state, action) => {

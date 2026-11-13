@@ -46,6 +46,16 @@ const TEXTOS = {
     cuerpo:
       "El CVU se valida contra BIND antes de guardarse. Si no es del titular, el backend lo rechaza.",
   },
+  consultarIdentidadProveedor: {
+    titulo: "Consultar los datos de identidad a 4i",
+    cuerpo:
+      "Esto le pide a 4i datos personales de la persona que no guardamos: domicilio, fecha de nacimiento, score del cotejo facial y vigencia del documento. La consulta queda auditada con tu usuario.",
+  },
+  traerImagenesIdentidad: {
+    titulo: "Traer las fotos de la validación",
+    cuerpo:
+      "Esto le pide a 4i el frente y el dorso del documento y la selfie del cotejo. Son datos biométricos, pesan cientos de kilobytes y la consulta queda auditada con tu usuario.",
+  },
 };
 
 const Fondo = styled.div`
