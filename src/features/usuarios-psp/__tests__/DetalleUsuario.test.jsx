@@ -9,19 +9,21 @@ vi.mock("src/lib/api/usuarios", () => ({
   listarUsuarios: vi.fn(),
   obtenerUsuario: vi.fn(),
   consultarIdentidadEnProveedor: vi.fn(),
+  revocarIdentidad: vi.fn(),
 }));
 
 let DetalleUsuario;
 let reducer;
 let obtenerUsuario;
 let consultarIdentidadEnProveedor;
+let revocarIdentidad;
 
 const SUB = "11111111-1111-1111-1111-111111111111";
 
 beforeAll(async () => {
   DetalleUsuario = (await import("../pages/DetalleUsuario")).default;
   reducer = (await import("../store/usuariosPspSlice")).default;
-  ({ obtenerUsuario, consultarIdentidadEnProveedor } =
+  ({ obtenerUsuario, consultarIdentidadEnProveedor, revocarIdentidad } =
     await import("src/lib/api/usuarios"));
 });
 
@@ -163,5 +165,90 @@ describe("DetalleUsuario", () => {
       expect(screen.getByText("No existe ese usuario")).toBeDefined()
     );
     expect(screen.queryByText("Identidad")).toBeNull();
+  });
+});
+
+describe("DetalleUsuario · revocar la identidad", () => {
+  const revocadaEnElBack = {
+    usuario_sub: SUB,
+    validada: false,
+    revocada_en: "2026-11-13T15:00:00Z",
+    revocada_por: "admin@ejemplo.com",
+    motivo_revocacion: "documento adulterado",
+  };
+
+  const abrirConfirmacion = async () => {
+    obtenerUsuario.mockResolvedValue(detalle);
+    const utils = renderizar();
+    await waitFor(() => expect(screen.getByText("Identidad")).toBeDefined());
+    fireEvent.click(screen.getByText("Revocar la identidad"));
+    return utils;
+  };
+
+  const escribirMotivo = (texto) =>
+    fireEvent.change(screen.getByLabelText("Motivo de la revocación"), {
+      target: { value: texto },
+    });
+
+  it("la confirmación repite el mail y no revoca sin motivo", async () => {
+    await abrirConfirmacion();
+
+    expect(screen.getAllByText("ana@ejemplo.com").length).toBeGreaterThan(2);
+    expect(screen.getByText("Sí, revocar").disabled).toBe(true);
+
+    escribirMotivo("   ");
+    expect(screen.getByText("Sí, revocar").disabled).toBe(true);
+  });
+
+  it("al confirmar muestra la identidad revocada sin volver a pedir el detalle", async () => {
+    await abrirConfirmacion();
+    const detalles = obtenerUsuario.mock.calls.length;
+    revocarIdentidad.mockResolvedValue(revocadaEnElBack);
+
+    escribirMotivo("documento adulterado");
+    fireEvent.click(screen.getByText("Sí, revocar"));
+
+    await waitFor(() =>
+      expect(revocarIdentidad).toHaveBeenLastCalledWith(
+        SUB,
+        "documento adulterado"
+      )
+    );
+    await waitFor(() => expect(screen.getByText("Revocada")).toBeDefined());
+    const celda = screen.getByText(/documento adulterado/);
+    expect(celda.textContent).toContain("admin@ejemplo.com");
+    expect(celda.textContent).toContain("2026-11-13T15:00:00Z");
+    expect(obtenerUsuario.mock.calls.length).toBe(detalles);
+    expect(screen.queryByText("Revocar la identidad")).toBeNull();
+  });
+
+  it("cancelar la confirmación no revoca nada", async () => {
+    await abrirConfirmacion();
+    revocarIdentidad.mockClear();
+
+    escribirMotivo("documento adulterado");
+    fireEvent.click(screen.getByText("Cancelar"));
+
+    expect(revocarIdentidad).not.toHaveBeenCalled();
+    expect(screen.getByText("Revocar la identidad")).toBeDefined();
+  });
+
+  it("un error al revocar no borra al usuario que se estaba viendo", async () => {
+    await abrirConfirmacion();
+    revocarIdentidad.mockRejectedValue({
+      response: {
+        status: 404,
+        data: { message: "no tiene identidad validada" },
+      },
+    });
+
+    escribirMotivo("documento adulterado");
+    fireEvent.click(screen.getByText("Sí, revocar"));
+
+    await waitFor(() =>
+      expect(screen.getByText("no tiene identidad validada")).toBeDefined()
+    );
+    expect(screen.getAllByText("ana@ejemplo.com").length).toBeGreaterThan(0);
+    expect(screen.getByText("Validada")).toBeDefined();
   });
 });

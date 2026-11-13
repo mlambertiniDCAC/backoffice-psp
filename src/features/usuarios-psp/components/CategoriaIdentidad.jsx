@@ -9,11 +9,20 @@ import {
   textoCuitDifiere,
   textoNombreDifiere,
 } from "src/lib/identidad";
-import { Aviso, Bajada, Chip, Panel, Tabla } from "components/Panel";
+import {
+  Aviso,
+  Bajada,
+  Chip,
+  Fila,
+  Panel,
+  Peligro,
+  Tabla,
+} from "components/Panel";
 
-const CategoriaIdentidad = ({ identidad }) => {
+const CategoriaIdentidad = ({ identidad, revocando, onRevocar }) => {
   const estado = estadoDeIdentidad(identidad);
   const intentos = identidad?.validaciones ?? [];
+  const sePuedeRevocar = estado === ESTADOS_IDENTIDAD.VALIDADA && !!onRevocar;
 
   return (
     <Panel>
@@ -68,6 +77,18 @@ const CategoriaIdentidad = ({ identidad }) => {
           Hay una validación abierta. Mientras no cierre, la identidad sigue sin
           validar.
         </Aviso>
+      ) : null}
+
+      {sePuedeRevocar ? (
+        <Fila style={{ marginBottom: 12 }}>
+          <Peligro type="button" disabled={revocando} onClick={onRevocar}>
+            Revocar la identidad
+          </Peligro>
+          <Bajada style={{ margin: 0 }}>
+            Revocarla la deja afuera de operar en la llamada siguiente, en todas
+            las cuentas en las que participe.
+          </Bajada>
+        </Fila>
       ) : null}
 
       <h3>Qué declaró contra qué dice el documento</h3>
@@ -158,6 +179,8 @@ CategoriaIdentidad.propTypes = {
     validacionEnCurso: PropTypes.bool,
     validaciones: PropTypes.array,
   }),
+  revocando: PropTypes.bool,
+  onRevocar: PropTypes.func,
 };
 
 export default CategoriaIdentidad;

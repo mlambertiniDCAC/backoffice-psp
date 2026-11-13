@@ -1,27 +1,35 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import {
   cargarUsuario,
   consultarProveedor,
   limpiarProveedor,
+  revocarIdentidadDeUsuario,
   traerImagenesDelProveedor,
 } from "../store/usuariosPspSlice";
 import CategoriaIdentidad from "../components/CategoriaIdentidad";
 import ConsultaProveedor from "../components/ConsultaProveedor";
+import ModalRevocar from "../components/ModalRevocar";
 import { Aviso, Bajada, Chip, Panel, Tabla, Titulo } from "components/Panel";
 
 const DetalleUsuario = () => {
   const { usuarioSub } = useParams();
   const dispatch = useDispatch();
-  const { usuario, cargandoUsuario, error, proveedor } = useSelector(
+  const { usuario, cargandoUsuario, error, proveedor, revocando } = useSelector(
     (s) => s.usuariosPsp
   );
+  const [confirmandoRevocacion, setConfirmandoRevocacion] = useState(false);
 
   useEffect(() => {
     dispatch(cargarUsuario(usuarioSub));
     return () => dispatch(limpiarProveedor());
   }, [dispatch, usuarioSub]);
+
+  const revocarConMotivo = async (motivo) => {
+    setConfirmandoRevocacion(false);
+    await dispatch(revocarIdentidadDeUsuario({ usuarioSub, motivo }));
+  };
 
   if (cargandoUsuario) return <p>Cargando usuario…</p>;
 
@@ -88,7 +96,11 @@ const DetalleUsuario = () => {
         </Tabla>
       </Panel>
 
-      <CategoriaIdentidad identidad={usuario.identidad} />
+      <CategoriaIdentidad
+        identidad={usuario.identidad}
+        revocando={revocando}
+        onRevocar={() => setConfirmandoRevocacion(true)}
+      />
 
       <ConsultaProveedor
         estado={proveedor}
@@ -99,6 +111,15 @@ const DetalleUsuario = () => {
         }
         onDescartar={() => dispatch(limpiarProveedor())}
       />
+
+      {confirmandoRevocacion ? (
+        <ModalRevocar
+          mail={usuario.mail}
+          revocando={revocando}
+          onCancelar={() => setConfirmandoRevocacion(false)}
+          onConfirmar={revocarConMotivo}
+        />
+      ) : null}
     </>
   );
 };

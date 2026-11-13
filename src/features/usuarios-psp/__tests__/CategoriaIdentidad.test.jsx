@@ -1,10 +1,12 @@
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
 import CategoriaIdentidad from "../components/CategoriaIdentidad";
 import { adaptarIdentidad } from "src/lib/identidad";
 
-const renderizar = (identidad) =>
-  render(<CategoriaIdentidad identidad={adaptarIdentidad(identidad)} />);
+const renderizar = (identidad, props = {}) =>
+  render(
+    <CategoriaIdentidad identidad={adaptarIdentidad(identidad)} {...props} />
+  );
 
 describe("CategoriaIdentidad", () => {
   it("muestra el estado validado con la fecha desde la que vale", () => {
@@ -157,5 +159,45 @@ describe("CategoriaIdentidad", () => {
 
     expect(screen.getByText("Validación en curso")).toBeDefined();
     expect(screen.getByText(/Hay una validación abierta/)).toBeDefined();
+  });
+});
+
+describe("CategoriaIdentidad · revocar", () => {
+  const validada = { validada: true, validada_en: "2026-11-10T12:00:00Z" };
+
+  it("una identidad validada se puede revocar", () => {
+    const onRevocar = vi.fn();
+
+    renderizar(validada, { onRevocar });
+    fireEvent.click(screen.getByText("Revocar la identidad"));
+
+    expect(onRevocar).toHaveBeenCalledTimes(1);
+  });
+
+  it("una identidad ya revocada no se vuelve a revocar desde acá", () => {
+    renderizar(
+      { ...validada, revocada_en: "2026-11-12T10:00:00Z" },
+      { onRevocar: vi.fn() }
+    );
+
+    expect(screen.queryByText("Revocar la identidad")).toBeNull();
+  });
+
+  it("una persona sin identidad validada no tiene nada que revocar", () => {
+    renderizar({ validada: false }, { onRevocar: vi.fn() });
+
+    expect(screen.queryByText("Revocar la identidad")).toBeNull();
+  });
+
+  it("mientras se revoca el botón no se puede volver a apretar", () => {
+    renderizar(validada, { onRevocar: vi.fn(), revocando: true });
+
+    expect(screen.getByText("Revocar la identidad").disabled).toBe(true);
+  });
+
+  it("sin quien atienda la revocación no se ofrece el botón", () => {
+    renderizar(validada);
+
+    expect(screen.queryByText("Revocar la identidad")).toBeNull();
   });
 });

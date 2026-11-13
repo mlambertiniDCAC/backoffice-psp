@@ -6,6 +6,7 @@ vi.mock("src/lib/api/usuarios", () => ({
   listarUsuarios: vi.fn(),
   obtenerUsuario: vi.fn(),
   consultarIdentidadEnProveedor: vi.fn(),
+  revocarIdentidad: vi.fn(),
 }));
 
 let reducer;
@@ -19,6 +20,8 @@ let selectPagina;
 let listarUsuarios;
 let obtenerUsuario;
 let consultarIdentidadEnProveedor;
+let revocarIdentidad;
+let revocarIdentidadDeUsuario;
 let MINIMO_TEXTO_BUSQUEDA;
 
 const SUB = "11111111-1111-1111-1111-111111111111";
@@ -31,10 +34,15 @@ beforeAll(async () => {
   consultarProveedor = slice.consultarProveedor;
   traerImagenesDelProveedor = slice.traerImagenesDelProveedor;
   limpiarProveedor = slice.limpiarProveedor;
+  revocarIdentidadDeUsuario = slice.revocarIdentidadDeUsuario;
   selectTotalPaginas = slice.selectTotalPaginas;
   selectPagina = slice.selectPagina;
-  ({ listarUsuarios, obtenerUsuario, consultarIdentidadEnProveedor } =
-    await import("src/lib/api/usuarios"));
+  ({
+    listarUsuarios,
+    obtenerUsuario,
+    consultarIdentidadEnProveedor,
+    revocarIdentidad,
+  } = await import("src/lib/api/usuarios"));
   ({ MINIMO_TEXTO_BUSQUEDA } = await import("src/lib/identidad"));
 });
 
@@ -297,5 +305,112 @@ describe("consulta al proveedor", () => {
     const { proveedor } = store.getState().usuariosPsp;
     expect(proveedor.datos).toBeNull();
     expect(proveedor.imagenes).toBeNull();
+  });
+});
+
+describe("revocar la identidad", () => {
+  const usuarioValidado = {
+    sub: SUB,
+    mail: "ana@ejemplo.com",
+    habilitado: true,
+    roles: ["usuario"],
+    identidad: {
+      validada: true,
+      validada_en: "2026-11-10T12:00:00Z",
+      documento: "22826019",
+      cuil: "20228260194",
+      validacion_id: 7,
+      validaciones: [{ id: 7, estado: "FINALIZADA" }],
+    },
+  };
+
+  const conUsuarioCargado = async () => {
+    obtenerUsuario.mockResolvedValue(usuarioValidado);
+    const store = crearStore();
+    await store.dispatch(cargarUsuario(SUB));
+    return store;
+  };
+
+  const revocadaEnElBack = {
+    usuario_sub: SUB,
+    validada: false,
+    revocada_en: "2026-11-13T15:00:00Z",
+    revocada_por: "admin@ejemplo.com",
+    motivo_revocacion: "documento adulterado",
+  };
+
+  it("manda el sub de la persona y el motivo", async () => {
+    const store = await conUsuarioCargado();
+    revocarIdentidad.mockResolvedValue(revocadaEnElBack);
+
+    await store.dispatch(
+      revocarIdentidadDeUsuario({
+        usuarioSub: SUB,
+        motivo: "documento adulterado",
+      })
+    );
+
+    expect(revocarIdentidad).toHaveBeenLastCalledWith(
+      SUB,
+      "documento adulterado"
+    );
+  });
+
+  it("actualiza la identidad del usuario sin volver a pedir el detalle", async () => {
+    const store = await conUsuarioCargado();
+    const detalles = obtenerUsuario.mock.calls.length;
+    revocarIdentidad.mockResolvedValue(revocadaEnElBack);
+
+    await store.dispatch(
+      revocarIdentidadDeUsuario({
+        usuarioSub: SUB,
+        motivo: "documento adulterado",
+      })
+    );
+
+    const { usuario, revocando } = store.getState().usuariosPsp;
+    expect(obtenerUsuario.mock.calls.length).toBe(detalles);
+    expect(usuario.identidad.validada).toBe(false);
+    expect(usuario.identidad.revocadaEn).toBe("2026-11-13T15:00:00Z");
+    expect(usuario.identidad.revocadaPor).toBe("admin@ejemplo.com");
+    expect(usuario.identidad.motivoRevocacion).toBe("documento adulterado");
+    expect(revocando).toBe(false);
+  });
+
+  it("lo que la revocación no devuelve queda como estaba", async () => {
+    const store = await conUsuarioCargado();
+    revocarIdentidad.mockResolvedValue(revocadaEnElBack);
+
+    await store.dispatch(
+      revocarIdentidadDeUsuario({ usuarioSub: SUB, motivo: "x" })
+    );
+
+    const { usuario } = store.getState().usuariosPsp;
+    expect(usuario.mail).toBe("ana@ejemplo.com");
+    expect(usuario.identidad.documento).toBe("22826019");
+    expect(usuario.identidad.cuil).toBe("20228260194");
+    expect(usuario.identidad.validadaEn).toBe("2026-11-10T12:00:00Z");
+    expect(usuario.identidad.validaciones).toHaveLength(1);
+  });
+
+  it("un error de la revocación no borra al usuario que se estaba viendo", async () => {
+    const store = await conUsuarioCargado();
+    revocarIdentidad.mockRejectedValue({
+      response: {
+        status: 404,
+        data: { message: "no tiene identidad validada" },
+      },
+    });
+
+    await store.dispatch(
+      revocarIdentidadDeUsuario({ usuarioSub: SUB, motivo: "x" })
+    );
+
+    const { usuario, error, revocando } = store.getState().usuariosPsp;
+    expect(usuario.mail).toBe("ana@ejemplo.com");
+    expect(usuario.identidad.validada).toBe(true);
+    expect(usuario.identidad.revocadaEn).toBeNull();
+    expect(error).toBe("no tiene identidad validada");
+    expect(revocando).toBe(false);
   });
 });
